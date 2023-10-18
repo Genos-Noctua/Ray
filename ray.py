@@ -1,3 +1,4 @@
+#Ray GUI v1.0
 import pygame
 import numpy as np
 import threading
@@ -40,12 +41,20 @@ class ray:
                 self.win_size = list(event.size)
                 self.win_size[1] = self.win_size[0]//16*9
                 self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
+                try:
+                    for key in self.res.keys():
+                        if self.res[key]['type'] == 'image' and 'cache' in self.res[key].keys():
+                            del self.res[key]['cache']
+                except: pass    
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
                     
     def add_text(self, text, pos, color, size, label):
         self.res[label] = {'type':'text', 'pos':pos, 'text':text, 'color':color, 'size': size}
+    
+    def delete(self, label):
+        del self.res[label]
     
     def add_image(self, image, pos, scale, label):
         self.res[label] = {'type':'image', 'image':image, 'pos':pos, 'scale':scale}
@@ -64,23 +73,28 @@ class ray:
         self.screen.blit(img, rect)
 
     def set_image(self, object):
+        if 'cache' in list(object.keys()):
+            self.screen.blit(*object['cache'])
+            return
         img = pygame.image.load(object['image']).convert()
         img = pygame.transform.scale(img, (object['scale']*img.get_size()[0]*(self.win_size[0]/self.MAXW), object['scale']*img.get_size()[1]*(self.win_size[1]/self.MAXH)))
         rect = img.get_rect()
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
+        object['cache'] = (img, rect)
         self.screen.blit(img, rect)
 
     def set_array(self, object):
+        if 'cache' in list(object.keys()):
+            self.screen.blit(*object['cache'])
+            return
         array = object['array']
         if array.ndim == 2:
             array = np.repeat(array, 3).reshape(array.shape[0], array.shape[1], 3)
-            img = pygame.surfarray.make_surface(array)
-            img = pygame.transform.scale(img, (object['scale']*100*(self.win_size[0]/self.MAXW), object['scale']*100*(self.win_size[1]/self.MAXH)))
-        elif array.ndim == 3:
-            img = pygame.surfarray.make_surface(array)
-            img = pygame.transform.scale(img, (object['scale']*100*(self.win_size[0]/self.MAXW), object['scale']*100*(self.win_size[1]/self.MAXH)))
+        img = pygame.surfarray.make_surface(array)
+        img = pygame.transform.scale(img, (object['scale']*array.shape[0]*(self.win_size[0]/self.MAXW), object['scale']*array.shape[1]*(self.win_size[1]/self.MAXH)))
         rect = img.get_rect()
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
+        object['cache'] = (img, rect)
         self.screen.blit(img, rect)
     
     def set_color(self, object):
@@ -91,15 +105,18 @@ class ray:
 
     def render(self, objects):
         self.screen.fill(self.bg_color)
-        for key in objects.keys():
-            if objects[key]['type'] == 'text':
-                self.set_text(objects[key])
-            elif objects[key]['type'] == 'image':
-                self.set_image(objects[key])
-            elif objects[key]['type'] == 'array':
-                self.set_array(objects[key])
-            elif objects[key]['type'] == 'color':
-                self.set_color(objects[key])
+        try:
+            for key in set(objects.keys()) - set(['fps']):
+                if objects[key]['type'] == 'text':
+                    self.set_text(objects[key])
+                elif objects[key]['type'] == 'image':
+                    self.set_image(objects[key])
+                elif objects[key]['type'] == 'array':
+                    self.set_array(objects[key])
+                elif objects[key]['type'] == 'color':
+                    self.set_color(objects[key])
+            if 'fps' in set(objects.keys()): self.set_text(objects['fps'])
+        except: pass
 
 '''
     display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
