@@ -1,11 +1,11 @@
-#Ray GUI v1.2
+#Ray GUI v1.3
 import pygame
 import numpy as np
 import threading
 
 class ray:
     # constructor
-    def __init__(self, win_scale=False, fps=False, bg_color = pygame.color.THECOLORS['black'], caption = False):
+    def __init__(self, win_scale=0.5, fps=60, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
         self.fps = fps
         self.caption = caption
         self.win_scale = win_scale
@@ -19,10 +19,8 @@ class ray:
     # preparations before loop
     def prepare(self):
         pygame.init()
-        self.win_size = (1280,800) if not self.win_scale else (int(pygame.display.Info().current_w*self.win_scale), int(pygame.display.Info().current_h*self.win_scale))
+        self.win_size = (int(pygame.display.Info().current_w*self.win_scale), int(pygame.display.Info().current_h*self.win_scale))
         del self.win_scale
-        self.fps = self.fps if self.fps else 60
-        self.caption = self.caption if self.caption else 'Ray GUI'
         self.clock = pygame.time.Clock()
         self.MAXW = pygame.display.Info().current_w
         self.MAXH = pygame.display.Info().current_h
@@ -91,7 +89,7 @@ class ray:
 
     def add_color(self, color, pos, size, label):
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
-    # </adding a new element to the resource bank>
+    # </>
 
     # <updating the parameters of an existing element>
     def set_text(self, text, label):
@@ -109,7 +107,7 @@ class ray:
 
     def set_color(self, color, label):
         if label in self.res.keys(): self.res[label]['color'] = color
-    # </updating the parameters of an existing element>
+    # </>
 
     # <putting an existing element on the screen>
     def render_text(self, object):
@@ -149,7 +147,7 @@ class ray:
         rect.width, rect.height = int(object['size'][0]*self.win_size[0]), int(object['size'][1]*self.win_size[1])
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
         pygame.draw.rect(self.screen, object['color'], rect)
-    # </putting an existing element on the screen>
+    # </>
 
 '''
     display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
