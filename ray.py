@@ -1,23 +1,26 @@
-#Ray GUI v1.0
+#Ray GUI v1.2
 import pygame
 import numpy as np
 import threading
 
 class ray:
-    def __init__(self, win_size=False, fps=False, bg_color = pygame.color.THECOLORS['black'], caption = False):
+    # constructor
+    def __init__(self, win_scale=False, fps=False, bg_color = pygame.color.THECOLORS['black'], caption = False):
         self.fps = fps
         self.caption = caption
-        self.win_size = win_size
+        self.win_scale = win_scale
         self.bg_color = bg_color
         self.running = True
         self.res = dict()
         self.loop = threading.Thread(target=self.mainloop, args=())
         self.loop.daemon = True
         self.loop.start()
-        
-    def mainloop(self):
+
+    # preparations before loop
+    def prepare(self):
         pygame.init()
-        self.win_size = (1280,800) if not self.win_size else(int(pygame.display.Info().current_w*self.win_size), int(pygame.display.Info().current_h*self.win_size))
+        self.win_size = (1280,800) if not self.win_scale else (int(pygame.display.Info().current_w*self.win_scale), int(pygame.display.Info().current_h*self.win_scale))
+        del self.win_scale
         self.fps = self.fps if self.fps else 60
         self.caption = self.caption if self.caption else 'Ray GUI'
         self.clock = pygame.time.Clock()
@@ -26,13 +29,17 @@ class ray:
         pygame.display.set_caption(self.caption)
         self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
 
+    # main loop
+    def mainloop(self):
+        self.prepare()
         while self.running:
             self.events()
+            self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
             self.render(self.res)
             pygame.display.flip()
             self.clock.tick(self.fps)
-            self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
-            
+
+    # event handler
     def events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -43,19 +50,39 @@ class ray:
                 self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
                 try:
                     for key in self.res.keys():
-                        if self.res[key]['type'] == 'image' and 'cache' in self.res[key].keys():
-                            del self.res[key]['cache']
-                except: pass    
+                        if 'cache' in self.res[key].keys(): del self.res[key]['cache']
+                except: pass
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                    
-    def add_text(self, text, pos, color, size, label):
-        self.res[label] = {'type':'text', 'pos':pos, 'text':text, 'color':color, 'size': size}
-    
+
+    # render all elements
+    def render(self, objects):
+        self.screen.fill(self.bg_color)
+        done = False
+        while not done:
+            try:
+                for key in set(objects.keys()) - set(['fps']):
+                    if objects[key]['type'] == 'text':
+                        self.render_text(objects[key])
+                    elif objects[key]['type'] == 'image':
+                        self.render_image(objects[key])
+                    elif objects[key]['type'] == 'array':
+                        self.render_array(objects[key])
+                    elif objects[key]['type'] == 'color':
+                        self.render_color(objects[key])
+                if 'fps' in set(objects.keys()): self.render_text(objects['fps'])
+                done = True
+            except: pass
+
+    # deleting elements from the resource bank
     def delete(self, label):
         del self.res[label]
-    
+
+    # <adding a new element to the resource bank>
+    def add_text(self, text, pos, color, size, label):
+        self.res[label] = {'type':'text', 'pos':pos, 'text':text, 'color':color, 'size': size}
+
     def add_image(self, image, pos, scale, label):
         self.res[label] = {'type':'image', 'image':image, 'pos':pos, 'scale':scale}
 
@@ -64,15 +91,35 @@ class ray:
 
     def add_color(self, color, pos, size, label):
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
+    # </adding a new element to the resource bank>
 
-    def set_text(self, object):
+    # <updating the parameters of an existing element>
+    def set_text(self, text, label):
+        if label in self.res.keys(): self.res[label]['text'] = text
+
+    def set_image(self, image, label):
+        if label in self.res.keys():
+            del self.res[label]['cache']
+            self.res[label]['image'] = image
+
+    def set_array(self, array, label):
+        if label in self.res.keys():
+            del self.res[label]['cache']
+            self.res[label]['array'] = array
+
+    def set_color(self, color, label):
+        if label in self.res.keys(): self.res[label]['color'] = color
+    # </updating the parameters of an existing element>
+
+    # <putting an existing element on the screen>
+    def render_text(self, object):
         font = pygame.font.SysFont('consola.ttf', int(object['size']*(self.win_size[0]/self.MAXW)))
         img = font.render(object['text'], True, object['color'])
         rect = img.get_rect()
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
         self.screen.blit(img, rect)
 
-    def set_image(self, object):
+    def render_image(self, object):
         if 'cache' in list(object.keys()):
             self.screen.blit(*object['cache'])
             return
@@ -83,7 +130,7 @@ class ray:
         object['cache'] = (img, rect)
         self.screen.blit(img, rect)
 
-    def set_array(self, object):
+    def render_array(self, object):
         if 'cache' in list(object.keys()):
             self.screen.blit(*object['cache'])
             return
@@ -96,35 +143,22 @@ class ray:
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
         object['cache'] = (img, rect)
         self.screen.blit(img, rect)
-    
-    def set_color(self, object):
+
+    def render_color(self, object):
         rect = pygame.Surface((0, 0)).get_rect()
         rect.width, rect.height = int(object['size'][0]*self.win_size[0]), int(object['size'][1]*self.win_size[1])
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
         pygame.draw.rect(self.screen, object['color'], rect)
-
-    def render(self, objects):
-        self.screen.fill(self.bg_color)
-        try:
-            for key in set(objects.keys()) - set(['fps']):
-                if objects[key]['type'] == 'text':
-                    self.set_text(objects[key])
-                elif objects[key]['type'] == 'image':
-                    self.set_image(objects[key])
-                elif objects[key]['type'] == 'array':
-                    self.set_array(objects[key])
-                elif objects[key]['type'] == 'color':
-                    self.set_color(objects[key])
-            if 'fps' in set(objects.keys()): self.set_text(objects['fps'])
-        except: pass
+    # </putting an existing element on the screen>
 
 '''
     display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
     display.add_image('lol.jpg', (0.2,0.2), 2.0, 'image')
     display.add_array(array, (0.8,0.2), 2.0, 'array')
+    display.set_image('lol.jpg', 'image')
+    display.set_array(array, 'array')
     display.add_color(color, (0.2,0.8), (0.1,0.1), 'color')
     display.add_text(str(x), (0.8,0.8),  color, 200, 'text')
-    display.add_text('Changed', (0.8,0.8),  color, 200, 'text')
+    display.set_text('Changed', 'text')
     display.add_text('Work hard', (0.5,0.5),  pygame.color.THECOLORS['white'], 500, 'header')
-    display.res['text']['text'] = 'changed again'
 '''
