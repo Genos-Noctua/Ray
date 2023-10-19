@@ -1,4 +1,4 @@
-#Ray GUI v1.3
+#Ray GUI v1.35
 import pygame
 import numpy as np
 import threading
@@ -6,6 +6,7 @@ import threading
 class ray:
     # constructor
     def __init__(self, win_scale=0.5, fps=60, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
+        self.colors = pygame.color.THECOLORS
         self.fps = fps
         self.caption = caption
         self.win_scale = win_scale
@@ -93,7 +94,9 @@ class ray:
 
     # <updating the parameters of an existing element>
     def set_text(self, text, label):
-        if label in self.res.keys(): self.res[label]['text'] = text
+        if label in self.res.keys(): 
+            del self.res[label]['cache']
+            self.res[label]['text'] = text
 
     def set_image(self, image, label):
         if label in self.res.keys():
@@ -106,15 +109,22 @@ class ray:
             self.res[label]['array'] = array
 
     def set_color(self, color, label):
-        if label in self.res.keys(): self.res[label]['color'] = color
+        if label in self.res.keys(): 
+            del self.res[label]['cache']
+            self.res[label]['color'] = color
+
     # </>
 
     # <putting an existing element on the screen>
     def render_text(self, object):
+        if 'cache' in list(object.keys()):
+            self.screen.blit(*object['cache'])
+            return
         font = pygame.font.SysFont('consola.ttf', int(object['size']*(self.win_size[0]/self.MAXW)))
         img = font.render(object['text'], True, object['color'])
         rect = img.get_rect()
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
+        object['cache'] = (img, rect)
         self.screen.blit(img, rect)
 
     def render_image(self, object):
@@ -143,9 +153,13 @@ class ray:
         self.screen.blit(img, rect)
 
     def render_color(self, object):
+        if 'cache' in list(object.keys()):
+            pygame.draw.rect(*object['cache'])
+            return
         rect = pygame.Surface((0, 0)).get_rect()
         rect.width, rect.height = int(object['size'][0]*self.win_size[0]), int(object['size'][1]*self.win_size[1])
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
+        object['cache'] = (self.screen, object['color'], rect)
         pygame.draw.rect(self.screen, object['color'], rect)
     # </>
 
