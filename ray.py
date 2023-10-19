@@ -95,22 +95,22 @@ class ray:
     # <updating the parameters of an existing element>
     def set_text(self, text, label):
         if label in self.res.keys(): 
-            del self.res[label]['cache']
+            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['text'] = text
 
     def set_image(self, image, label):
         if label in self.res.keys():
-            del self.res[label]['cache']
+            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['image'] = image
 
     def set_array(self, array, label):
         if label in self.res.keys():
-            del self.res[label]['cache']
+            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['array'] = array
 
     def set_color(self, color, label):
         if label in self.res.keys(): 
-            del self.res[label]['cache']
+            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['color'] = color
 
     # </>
