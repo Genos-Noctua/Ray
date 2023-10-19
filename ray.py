@@ -1,4 +1,4 @@
-#Ray GUI v1.35
+#Ray GUI v1.4
 import pygame
 import numpy as np
 import threading
@@ -11,6 +11,7 @@ class ray:
         self.caption = caption
         self.win_scale = win_scale
         self.bg_color = bg_color
+        self.locked = False
         self.running = True
         self.res = dict()
         self.loop = threading.Thread(target=self.mainloop, args=())
@@ -34,8 +35,9 @@ class ray:
         while self.running:
             self.events()
             self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
-            self.render(self.res)
-            pygame.display.flip()
+            if not self.locked: 
+                self.render(self.res)
+                pygame.display.flip()
             self.clock.tick(self.fps)
 
     # event handler
