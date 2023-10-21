@@ -1,16 +1,17 @@
-#Ray GUI v1.4
-import pygame
+#Ray GUI v1.5
+import pygame, time, threading
 import numpy as np
-import threading
 
 class ray:
     # constructor
-    def __init__(self, win_scale=0.5, fps=60, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
+    def __init__(self, win_scale=0.5, fps=60, fps_style = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
         self.colors = pygame.color.THECOLORS
         self.fps = fps
+        self.fps_style = fps_style
         self.caption = caption
         self.win_scale = win_scale
         self.bg_color = bg_color
+        self.edited = True
         self.locked = False
         self.running = True
         self.res = dict()
@@ -26,7 +27,7 @@ class ray:
         self.clock = pygame.time.Clock()
         self.MAXW = pygame.display.Info().current_w
         self.MAXH = pygame.display.Info().current_h
-        pygame.display.set_caption(self.caption)
+        if self.fps_style == 0: pygame.display.set_caption(self.caption)
         self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
 
     # main loop
@@ -34,8 +35,9 @@ class ray:
         self.prepare()
         while self.running:
             self.events()
-            self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
-            if not self.locked: 
+            if self.fps_style == 2: self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
+            if self.fps_style == 1: pygame.display.set_caption(f'FPS: {int(self.clock.get_fps())}')
+            if not self.locked or not self.hidden: 
                 self.render(self.res)
                 pygame.display.flip()
             self.clock.tick(self.fps)
@@ -56,13 +58,18 @@ class ray:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+        if pygame.display.get_active():
+            self.hidden = False
+        else:
+            self.hidden = True
+            time.sleep(1)
 
     # render all elements
     def render(self, objects):
-        self.screen.fill(self.bg_color)
-        done = False
+        done = not self.edited
         while not done:
             try:
+                self.screen.fill(self.bg_color)
                 for key in set(objects.keys()) - set(['fps']):
                     if objects[key]['type'] == 'text':
                         self.render_text(objects[key])
@@ -75,42 +82,52 @@ class ray:
                 if 'fps' in set(objects.keys()): self.render_text(objects['fps'])
                 done = True
             except: pass
+        self.edited = False
 
     # deleting elements from the resource bank
     def delete(self, label):
+        self.edited = True
         del self.res[label]
 
     # <adding a new element to the resource bank>
     def add_text(self, text, pos, color, size, label):
+        self.edited = True
         self.res[label] = {'type':'text', 'pos':pos, 'text':text, 'color':color, 'size': size}
 
     def add_image(self, image, pos, scale, label):
+        self.edited = True
         self.res[label] = {'type':'image', 'image':image, 'pos':pos, 'scale':scale}
 
     def add_array(self, array, pos, scale, label):
+        self.edited = True
         self.res[label] = {'type':'array', 'array':array, 'pos':pos, 'scale':scale}
 
     def add_color(self, color, pos, size, label):
+        self.edited = True
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
     # </>
 
     # <updating the parameters of an existing element>
     def set_text(self, text, label):
+        self.edited = True
         if label in self.res.keys(): 
             if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['text'] = text
 
     def set_image(self, image, label):
+        self.edited = True
         if label in self.res.keys():
             if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['image'] = image
 
     def set_array(self, array, label):
+        self.edited = True
         if label in self.res.keys():
             if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['array'] = array
 
     def set_color(self, color, label):
+        self.edited = True
         if label in self.res.keys(): 
             if 'cache' in self.res[label].keys(): del self.res[label]['cache']
             self.res[label]['color'] = color
@@ -164,15 +181,3 @@ class ray:
         object['cache'] = (self.screen, object['color'], rect)
         pygame.draw.rect(self.screen, object['color'], rect)
     # </>
-
-'''
-    display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
-    display.add_image('lol.jpg', (0.2,0.2), 2.0, 'image')
-    display.add_array(array, (0.8,0.2), 2.0, 'array')
-    display.set_image('lol.jpg', 'image')
-    display.set_array(array, 'array')
-    display.add_color(color, (0.2,0.8), (0.1,0.1), 'color')
-    display.add_text(str(x), (0.8,0.8),  color, 200, 'text')
-    display.set_text('Changed', 'text')
-    display.add_text('Work hard', (0.5,0.5),  pygame.color.THECOLORS['white'], 500, 'header')
-'''
