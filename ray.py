@@ -35,9 +35,12 @@ class ray:
         self.prepare()
         while self.running:
             self.events()
+            if not pygame.display.get_active(): 
+                time.sleep(1)
+                continue
             if self.fps_style == 2: self.add_text(str(int(self.clock.get_fps())), (0.02,0.05),  pygame.color.THECOLORS['yellow'], 50, 'fps')
             if self.fps_style == 1: pygame.display.set_caption(f'FPS: {int(self.clock.get_fps())}')
-            if not self.locked or not self.hidden: 
+            if not self.locked: 
                 self.render(self.res)
                 pygame.display.flip()
             self.clock.tick(self.fps)
@@ -58,11 +61,6 @@ class ray:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-        if pygame.display.get_active():
-            self.hidden = False
-        else:
-            self.hidden = True
-            time.sleep(1)
 
     # render all elements
     def render(self, objects):
@@ -181,3 +179,15 @@ class ray:
         object['cache'] = (self.screen, object['color'], rect)
         pygame.draw.rect(self.screen, object['color'], rect)
     # </>
+
+'''
+    display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
+    display.add_image('lol.jpg', (0.2,0.2), 2.0, 'image')
+    display.add_array(array, (0.8,0.2), 2.0, 'array')
+    display.set_image('lol.jpg', 'image')
+    display.set_array(array, 'array')
+    display.add_color(color, (0.2,0.8), (0.1,0.1), 'color')
+    display.add_text(str(x), (0.8,0.8),  color, 200, 'text')
+    display.set_text('Changed', 'text')
+    display.add_text('Work hard', (0.5,0.5),  pygame.color.THECOLORS['white'], 500, 'header')
+'''
