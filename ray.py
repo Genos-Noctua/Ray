@@ -1,4 +1,4 @@
-#Ray GUI v1.5
+#Ray GUI v1.6
 import pygame, time, threading
 import numpy as np
 
@@ -106,31 +106,11 @@ class ray:
     # </>
 
     # <updating the parameters of an existing element>
-    def set_text(self, text, label):
+    def put(self, element, label):
         self.edited = True
         if label in self.res.keys(): 
             if 'cache' in self.res[label].keys(): del self.res[label]['cache']
-            self.res[label]['text'] = text
-
-    def set_image(self, image, label):
-        self.edited = True
-        if label in self.res.keys():
-            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
-            self.res[label]['image'] = image
-
-    def set_array(self, array, label):
-        self.edited = True
-        if label in self.res.keys():
-            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
-            self.res[label]['array'] = array
-
-    def set_color(self, color, label):
-        self.edited = True
-        if label in self.res.keys(): 
-            if 'cache' in self.res[label].keys(): del self.res[label]['cache']
-            self.res[label]['color'] = color
-
-    # </>
+            self.res[label][self.res[label]['type']] = element
 
     # <putting an existing element on the screen>
     def render_text(self, object):
