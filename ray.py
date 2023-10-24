@@ -105,7 +105,7 @@ class ray:
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
     # </>
 
-    # <updating the parameters of an existing element>
+    # updating the parameters of an existing element
     def put(self, element, label):
         self.edited = True
         if label in self.res.keys(): 
