@@ -1,5 +1,6 @@
-#Ray GUI v1.6
-import pygame, time, threading
+#Ray GUI v1.7
+import pygame, time, threading, matplotlib.pyplot as plt
+from PIL import Image
 import numpy as np
 
 class ray:
@@ -77,6 +78,8 @@ class ray:
                         self.render_array(objects[key])
                     elif objects[key]['type'] == 'color':
                         self.render_color(objects[key])
+                    elif objects[key]['type'] == 'plot':
+                        self.render_plot(objects[key])
                 if 'fps' in set(objects.keys()): self.render_text(objects['fps'])
                 done = True
             except: pass
@@ -103,6 +106,10 @@ class ray:
     def add_color(self, color, pos, size, label):
         self.edited = True
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
+
+    def add_plot(self, plot, pos, scale, label):
+        self.edited = True
+        self.res[label] = {'type':'plot', 'plot':plot, 'pos':pos, 'scale':scale}
     # </>
 
     # updating the parameters of an existing element
@@ -158,16 +165,22 @@ class ray:
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
         object['cache'] = (self.screen, object['color'], rect)
         pygame.draw.rect(self.screen, object['color'], rect)
+    
+    def render_plot(self, object):
+        if 'cache' in list(object.keys()):
+            self.screen.blit(*object['cache'])
+            return
+        fig, ax = plt.subplots()
+        ax.plot(object['plot'])
+        fig.canvas.draw()
+        width, height = fig.get_size_inches() * fig.get_dpi()
+        array = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
+        del fig, ax
+        array = np.array(Image.fromarray(array).transpose(5))
+        img = pygame.surfarray.make_surface(array)
+        img = pygame.transform.scale(img, (object['scale']*array.shape[0]*(self.win_size[0]/self.MAXW), object['scale']*array.shape[1]*(self.win_size[1]/self.MAXH)))
+        rect = img.get_rect()
+        rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
+        object['cache'] = (img, rect)
+        self.screen.blit(img, rect)
     # </>
-
-'''
-    display = ray(bg_color=pygame.color.THECOLORS['lightskyblue'], win_size=0.3)
-    display.add_image('lol.jpg', (0.2,0.2), 2.0, 'image')
-    display.add_array(array, (0.8,0.2), 2.0, 'array')
-    display.set_image('lol.jpg', 'image')
-    display.set_array(array, 'array')
-    display.add_color(color, (0.2,0.8), (0.1,0.1), 'color')
-    display.add_text(str(x), (0.8,0.8),  color, 200, 'text')
-    display.set_text('Changed', 'text')
-    display.add_text('Work hard', (0.5,0.5),  pygame.color.THECOLORS['white'], 500, 'header')
-'''
