@@ -1,4 +1,4 @@
-#Ray GUI v1.7
+#Ray GUI v1.8
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -69,7 +69,7 @@ class ray:
         while not done:
             try:
                 self.screen.fill(self.bg_color)
-                for key in set(objects.keys()) - set(['fps']):
+                for key in (set(objects.keys()) - set(['fps']) - set(map(str, list(range(1000))))):
                     if objects[key]['type'] == 'text':
                         self.render_text(objects[key])
                     elif objects[key]['type'] == 'image':
@@ -81,6 +81,19 @@ class ray:
                     elif objects[key]['type'] == 'plot':
                         self.render_plot(objects[key])
                 if 'fps' in set(objects.keys()): self.render_text(objects['fps'])
+                id = 1
+                while str(id) in list(objects.keys()):
+                    if objects[str(id)]['type'] == 'text':
+                        self.render_text(objects[str(id)])
+                    elif objects[str(id)]['type'] == 'image':
+                        self.render_image(objects[str(id)])
+                    elif objects[str(id)]['type'] == 'array':
+                        self.render_array(objects[str(id)])
+                    elif objects[str(id)]['type'] == 'color':
+                        self.render_color(objects[str(id)])
+                    elif objects[str(id)]['type'] == 'plot':
+                        self.render_plot(objects[str(id)])
+                    id += 1
                 done = True
             except: pass
         self.edited = False
