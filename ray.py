@@ -1,4 +1,4 @@
-#Ray GUI v1.8
+#Ray GUI v1.9
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -65,34 +65,28 @@ class ray:
 
     # render all elements
     def render(self, objects):
+        def switch(objects, key):
+            if objects[key]['type'] == 'text':
+                self.render_text(objects[key])
+            elif objects[key]['type'] == 'image':
+                self.render_image(objects[key])
+            elif objects[key]['type'] == 'array':
+                self.render_array(objects[key])
+            elif objects[key]['type'] == 'color':
+                self.render_color(objects[key])
+            elif objects[key]['type'] == 'plot':
+                self.render_plot(objects[key])
+        
         done = not self.edited
         while not done:
             try:
                 self.screen.fill(self.bg_color)
                 for key in (set(objects.keys()) - set(['fps']) - set(map(str, list(range(1000))))):
-                    if objects[key]['type'] == 'text':
-                        self.render_text(objects[key])
-                    elif objects[key]['type'] == 'image':
-                        self.render_image(objects[key])
-                    elif objects[key]['type'] == 'array':
-                        self.render_array(objects[key])
-                    elif objects[key]['type'] == 'color':
-                        self.render_color(objects[key])
-                    elif objects[key]['type'] == 'plot':
-                        self.render_plot(objects[key])
+                    switch(objects, key)
                 if 'fps' in set(objects.keys()): self.render_text(objects['fps'])
                 id = 1
                 while str(id) in list(objects.keys()):
-                    if objects[str(id)]['type'] == 'text':
-                        self.render_text(objects[str(id)])
-                    elif objects[str(id)]['type'] == 'image':
-                        self.render_image(objects[str(id)])
-                    elif objects[str(id)]['type'] == 'array':
-                        self.render_array(objects[str(id)])
-                    elif objects[str(id)]['type'] == 'color':
-                        self.render_color(objects[str(id)])
-                    elif objects[str(id)]['type'] == 'plot':
-                        self.render_plot(objects[str(id)])
+                    switch(objects, str(id))
                     id += 1
                 done = True
             except: pass
@@ -183,17 +177,21 @@ class ray:
         if 'cache' in list(object.keys()):
             self.screen.blit(*object['cache'])
             return
-        fig, ax = plt.subplots()
+        if 'plots' in list(object.keys()):
+            fig, ax = object['plots']
+        else: fig, ax = plt.subplots()
+        fig.set_size_inches(16,9)
         ax.plot(object['plot'])
         fig.canvas.draw()
         width, height = fig.get_size_inches() * fig.get_dpi()
         array = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
-        del fig, ax
         array = np.array(Image.fromarray(array).transpose(5))
         img = pygame.surfarray.make_surface(array)
-        img = pygame.transform.scale(img, (object['scale']*array.shape[0]*(self.win_size[0]/self.MAXW), object['scale']*array.shape[1]*(self.win_size[1]/self.MAXH)))
+        img = pygame.transform.scale(img, (object['scale']/100*array.shape[0]*(self.win_size[0]/self.MAXW), object['scale']/100*array.shape[1]*(self.win_size[1]/self.MAXH)))
         rect = img.get_rect()
         rect.center = int(object['pos'][0]*self.win_size[0]), int(object['pos'][1]*self.win_size[1])
-        object['cache'] = (img, rect)
+        ax.clear()
+        object['cache'] = (img, rect)        
+        object['plots'] = fig, ax
         self.screen.blit(img, rect)
     # </>
