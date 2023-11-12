@@ -1,4 +1,4 @@
-#Ray GUI v1.9
+#Ray GUI v1.91
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -52,6 +52,7 @@ class ray:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.VIDEORESIZE:
+                self.edited = True
                 self.win_size = list(event.size)
                 self.win_size[1] = self.win_size[0]//16*9
                 self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
