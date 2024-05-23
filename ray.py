@@ -1,12 +1,12 @@
-#Ray GUI v1.91
+#Ray GUI v1.92
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 
 class ray:
     # constructor
-    def __init__(self, win_scale=0.5, fps=60, fps_style = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
-        self.colors = pygame.color.THECOLORS
+    colors = pygame.color.THECOLORS
+    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
         self.fps = fps
         self.fps_style = fps_style
         self.caption = caption
@@ -181,7 +181,7 @@ class ray:
         if 'plots' in list(object.keys()):
             fig, ax = object['plots']
         else: fig, ax = plt.subplots()
-        fig.set_size_inches(16,9)
+        fig.set_size_inches(16/2,9/2)
         ax.plot(object['plot'])
         fig.canvas.draw()
         width, height = fig.get_size_inches() * fig.get_dpi()
