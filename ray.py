@@ -6,12 +6,13 @@ import numpy as np
 class ray:
     # constructor
     colors = pygame.color.THECOLORS
-    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
+    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, plot_smooth = True, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
         self.fps = fps
         self.fps_style = fps_style
         self.caption = caption
         self.win_scale = win_scale
         self.bg_color = bg_color
+        self.plot_smooth = plot_smooth
         self.edited = True
         self.locked = False
         self.running = True
@@ -19,6 +20,9 @@ class ray:
         self.loop = threading.Thread(target=self.mainloop, args=())
         self.loop.daemon = True
         self.loop.start()
+
+    def smooth_array(self, arr, window_size=10):
+        return np.convolve(arr, np.ones(window_size) / window_size, mode='valid')
 
     # preparations before loop
     def prepare(self):
@@ -182,7 +186,9 @@ class ray:
             fig, ax = object['plots']
         else: fig, ax = plt.subplots()
         fig.set_size_inches(16/2,9/2)
-        ax.plot(object['plot'])
+        if self.plot_smooth: 
+            ax.plot(self.smooth_array(object['plot']))
+        else: ax.plot(object['plot'])
         fig.canvas.draw()
         width, height = fig.get_size_inches() * fig.get_dpi()
         array = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
