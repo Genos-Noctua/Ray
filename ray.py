@@ -1,4 +1,4 @@
-#Ray GUI v1.92
+#Ray GUI v1.95
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -6,7 +6,7 @@ import numpy as np
 class ray:
     # constructor
     colors = pygame.color.THECOLORS
-    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, plot_smooth = True, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
+    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, plot_smooth = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
         self.fps = fps
         self.fps_style = fps_style
         self.caption = caption
@@ -21,7 +21,7 @@ class ray:
         self.loop.daemon = True
         self.loop.start()
 
-    def smooth_array(self, arr, window_size=10):
+    def smooth_array(self, arr, window_size):
         return np.convolve(arr, np.ones(window_size) / window_size, mode='valid')
 
     # preparations before loop
@@ -48,7 +48,7 @@ class ray:
             if not self.locked: 
                 self.render(self.res)
                 pygame.display.flip()
-            self.clock.tick(self.fps)
+                self.clock.tick(self.fps)
 
     # event handler
     def events(self):
@@ -58,7 +58,6 @@ class ray:
             elif event.type == pygame.VIDEORESIZE:
                 self.edited = True
                 self.win_size = list(event.size)
-                self.win_size[1] = self.win_size[0]//16*9
                 self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
                 try:
                     for key in self.res.keys():
@@ -119,9 +118,9 @@ class ray:
         self.edited = True
         self.res[label] = {'type':'color', 'size':size, 'pos':pos, 'color':color}
 
-    def add_plot(self, plot, pos, scale, label):
+    def add_plot(self, plot, pos, scale, smooth, label):
         self.edited = True
-        self.res[label] = {'type':'plot', 'plot':plot, 'pos':pos, 'scale':scale}
+        self.res[label] = {'type':'plot', 'plot':plot, 'pos':pos, 'smooth':smooth, 'scale':scale}
     # </>
 
     # updating the parameters of an existing element
@@ -186,8 +185,8 @@ class ray:
             fig, ax = object['plots']
         else: fig, ax = plt.subplots()
         fig.set_size_inches(16/2,9/2)
-        if self.plot_smooth: 
-            ax.plot(self.smooth_array(object['plot']))
+        if object['smooth'] != 0: 
+            ax.plot(self.smooth_array(object['plot'], object['smooth']))
         else: ax.plot(object['plot'])
         fig.canvas.draw()
         width, height = fig.get_size_inches() * fig.get_dpi()
