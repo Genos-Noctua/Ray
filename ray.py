@@ -1,4 +1,4 @@
-#Ray GUI v1.95
+#Ray GUI v1.99
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -6,13 +6,14 @@ import numpy as np
 class ray:
     # constructor
     colors = pygame.color.THECOLORS
-    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, plot_smooth = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI'):
+    def __init__(self, win_scale=0.9, fps=60, fps_style = 0, plot_smooth = 0, bg_color = pygame.color.THECOLORS['black'], caption = 'Ray GUI', optimisations = True):
         self.fps = fps
         self.fps_style = fps_style
         self.caption = caption
         self.win_scale = win_scale
         self.bg_color = bg_color
         self.plot_smooth = plot_smooth
+        self.optimisations = optimisations
         self.edited = True
         self.locked = False
         self.running = True
@@ -81,7 +82,7 @@ class ray:
             elif objects[key]['type'] == 'plot':
                 self.render_plot(objects[key])
         
-        done = not self.edited
+        done = not self.edited if self.optimisations else False
         while not done:
             try:
                 self.screen.fill(self.bg_color)
@@ -132,7 +133,7 @@ class ray:
 
     # <putting an existing element on the screen>
     def render_text(self, object):
-        if 'cache' in list(object.keys()):
+        if 'cache' in list(object.keys()) and self.optimisations:
             self.screen.blit(*object['cache'])
             return
         font = pygame.font.SysFont('consola.ttf', int(object['size']*(self.win_size[0]/self.MAXW)))
@@ -143,7 +144,7 @@ class ray:
         self.screen.blit(img, rect)
 
     def render_image(self, object):
-        if 'cache' in list(object.keys()):
+        if 'cache' in list(object.keys()) and self.optimisations:
             self.screen.blit(*object['cache'])
             return
         img = pygame.image.load(object['image']).convert()
@@ -154,7 +155,7 @@ class ray:
         self.screen.blit(img, rect)
 
     def render_array(self, object):
-        if 'cache' in list(object.keys()):
+        if 'cache' in list(object.keys()) and self.optimisations:
             self.screen.blit(*object['cache'])
             return
         array = object['array']
@@ -168,7 +169,7 @@ class ray:
         self.screen.blit(img, rect)
 
     def render_color(self, object):
-        if 'cache' in list(object.keys()):
+        if 'cache' in list(object.keys()) and self.optimisations:
             pygame.draw.rect(*object['cache'])
             return
         rect = pygame.Surface((0, 0)).get_rect()
@@ -178,7 +179,7 @@ class ray:
         pygame.draw.rect(self.screen, object['color'], rect)
     
     def render_plot(self, object):
-        if 'cache' in list(object.keys()):
+        if 'cache' in list(object.keys()) and self.optimisations:
             self.screen.blit(*object['cache'])
             return
         if 'plots' in list(object.keys()):
