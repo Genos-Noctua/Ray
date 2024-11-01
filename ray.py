@@ -1,4 +1,4 @@
-#Ray GUI v1.99
+#Ray GUI v1.991
 import pygame, time, threading, matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
@@ -14,6 +14,7 @@ class ray:
         self.bg_color = bg_color
         self.plot_smooth = plot_smooth
         self.optimisations = optimisations
+        self.fullscreen = False
         self.edited = True
         self.locked = False
         self.running = True
@@ -59,14 +60,27 @@ class ray:
             elif event.type == pygame.VIDEORESIZE:
                 self.edited = True
                 self.win_size = list(event.size)
-                self.screen = pygame.display.set_mode(self.win_size, pygame.RESIZABLE, vsync=1)
                 try:
                     for key in self.res.keys():
-                        if 'cache' in self.res[key].keys(): del self.res[key]['cache']
+                        if 'cache' in self.res[key].keys():
+                            del self.res[key]['cache']
                 except: pass
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.running = False
+                if event.key == pygame.K_F12:
+                    if self.fullscreen:
+                        self.screen = pygame.display.set_mode(self.prev, pygame.RESIZABLE, vsync=1)
+                        self.fullscreen = False
+                    else:
+                        my_event = pygame.event.EventType(pygame.VIDEORESIZE)
+                        my_event.size = (self.MAXW, self.MAXH)
+                        self.prev = self.win_size
+                        self.screen = pygame.display.set_mode((self.MAXW, self.MAXH), pygame.FULLSCREEN, vsync=1)
+                        pygame.event.post(my_event)
+                        self.fullscreen = True
+
+    def wait(self):
+        while self.running:
+            time.sleep(1)
 
     # render all elements
     def render(self, objects):
